@@ -1,0 +1,138 @@
+name: Deploy to docs.opencloud.dev
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Run every day at 2 AM UTC to fetch latest docs
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  collect-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Create external docs directories
+        run: |
+          mkdir -p external-docs/portal-workspace
+          mkdir -p external-docs/app-portal
+          mkdir -p external-docs/catalog
+          mkdir -p external-docs/templates
+
+      - name: Clone and copy portal-workspace docs
+        run: |
+          git clone https://github.com/open-service-portal/portal-workspace.git temp-portal-workspace
+          if [ -d "temp-portal-workspace/docs" ]; then
+            cp -r temp-portal-workspace/docs/* external-docs/portal-workspace/ 2>/dev/null || true
+          fi
+          if [ -f "temp-portal-workspace/README.md" ]; then
+            cp temp-portal-workspace/README.md external-docs/portal-workspace/index.md
+          fi
+          rm -rf temp-portal-workspace
+
+      - name: Clone and copy app-portal docs
+        run: |
+          git clone https://github.com/open-service-portal/app-portal.git temp-app-portal
+          if [ -d "temp-app-portal/docs" ]; then
+            cp -r temp-app-portal/docs/* external-docs/app-portal/ 2>/dev/null || true
+          fi
+          if [ -f "temp-app-portal/README.md" ]; then
+            cp temp-app-portal/README.md external-docs/app-portal/index.md
+          fi
+          if [ -f "temp-app-portal/CLAUDE.md" ]; then
+            cp temp-app-portal/CLAUDE.md external-docs/app-portal/claude.md
+          fi
+          rm -rf temp-app-portal
+
+      - name: Clone and copy catalog docs
+        run: |
+          git clone https://github.com/open-service-portal/catalog.git temp-catalog
+          if [ -d "temp-catalog/docs" ]; then
+            cp -r temp-catalog/docs/* external-docs/catalog/ 2>/dev/null || true
+          fi
+          if [ -f "temp-catalog/README.md" ]; then
+            cp temp-catalog/README.md external-docs/catalog/index.md
+          fi
+          rm -rf temp-catalog
+
+      - name: Collect template documentation
+        run: |
+          # Create template index
+          echo "# Templates Documentation" > external-docs/templates/index.md
+          echo "" >> external-docs/templates/index.md
+          echo "## Crossplane Templates" >> external-docs/templates/index.md
+          echo "" >> external-docs/templates/index.md
+          
+          # Clone and document each template repo
+          for repo in template-dns-record; do
+            echo "### $repo" >> external-docs/templates/index.md
+            git clone https://github.com/open-service-portal/$repo.git temp-$repo
+            if [ -f "temp-$repo/README.md" ]; then
+              echo "" >> external-docs/templates/index.md
+              tail -n +2 temp-$repo/README.md >> external-docs/templates/index.md
+              echo "" >> external-docs/templates/index.md
+              echo "---" >> external-docs/templates/index.md
+              echo "" >> external-docs/templates/index.md
+            fi
+            rm -rf temp-$repo
+          done
+          
+          echo "" >> external-docs/templates/index.md
+          echo "## Backstage Service Templates" >> external-docs/templates/index.md
+          echo "" >> external-docs/templates/index.md
+          
+          # Document service templates
+          for repo in service-nodejs-template service-mongodb-template service-cluster-template service-firewall-template service-dnsrecord-template service-mongodb-golden-path-template; do
+            echo "### $repo" >> external-docs/templates/index.md
+            git clone https://github.com/open-service-portal/$repo.git temp-$repo 2>/dev/null || continue
+            if [ -f "temp-$repo/README.md" ]; then
+              echo "" >> external-docs/templates/index.md
+              tail -n +2 temp-$repo/README.md >> external-docs/templates/index.md
+              echo "" >> external-docs/templates/index.md
+              echo "---" >> external-docs/templates/index.md
+              echo "" >> external-docs/templates/index.md
+            fi
+            rm -rf temp-$repo
+          done
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build website
+        run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./build
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: collect-docs
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
