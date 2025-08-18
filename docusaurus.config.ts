@@ -40,14 +40,7 @@ const config: Config = {
     [
       'classic',
       {
-        docs: {
-          id: 'default',
-          path: 'docs',
-          routeBasePath: 'docs',
-          sidebarPath: './sidebars.ts',
-          editUrl:
-            'https://github.com/open-service-portal/docusaurus/tree/main/',
-        },
+        docs: false,
         blog: false,
         theme: {
           customCss: './src/css/custom.css',
@@ -109,12 +102,6 @@ const config: Config = {
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
-          position: 'left',
-          label: 'Overview',
-        },
-        {
           to: '/portal-workspace',
           label: 'Workspace',
           position: 'left',
@@ -148,8 +135,16 @@ const config: Config = {
           title: 'Docs',
           items: [
             {
-              label: 'Tutorial',
-              to: '/docs/intro',
+              label: 'Workspace',
+              to: '/portal-workspace',
+            },
+            {
+              label: 'App Portal',
+              to: '/app-portal',
+            },
+            {
+              label: 'Catalog',
+              to: '/catalog',
             },
           ],
         },

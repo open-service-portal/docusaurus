@@ -32,19 +32,6 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Fetch organization profile README
-        run: |
-          # Get the organization profile README as main intro
-          curl -s https://raw.githubusercontent.com/open-service-portal/.github/main/profile/README.md > docs/intro.md
-          
-          # Add frontmatter for Docusaurus
-          echo "---" > temp_intro.md
-          echo "sidebar_position: 1" >> temp_intro.md
-          echo "title: Welcome to Open Service Portal" >> temp_intro.md
-          echo "---" >> temp_intro.md
-          echo "" >> temp_intro.md
-          cat docs/intro.md >> temp_intro.md
-          mv temp_intro.md docs/intro.md
 
       - name: Create external docs directories
         run: |
