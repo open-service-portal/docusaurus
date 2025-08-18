@@ -5,6 +5,19 @@
 
 echo "🔄 Collecting documentation from Open Service Portal repositories..."
 
+# Fetch organization README for homepage
+echo "📚 Fetching organization README for homepage..."
+curl -s https://raw.githubusercontent.com/open-service-portal/.github/main/profile/README.md > src/pages/organization-readme.md
+
+# Add frontmatter for Docusaurus page
+echo "---" > src/pages/index.md
+echo "title: Welcome to Open Service Portal" >> src/pages/index.md
+echo "hide_table_of_contents: true" >> src/pages/index.md
+echo "---" >> src/pages/index.md
+echo "" >> src/pages/index.md
+cat src/pages/organization-readme.md >> src/pages/index.md
+rm src/pages/organization-readme.md
+
 # Create directories
 mkdir -p external-docs/portal-workspace
 mkdir -p external-docs/app-portal
