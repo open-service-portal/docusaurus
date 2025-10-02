@@ -101,43 +101,56 @@ jobs:
 
       - name: Collect template documentation
         run: |
-          # Create template index
+          # Dynamically discover all template repositories
+          echo "Discovering template repositories..."
+          gh api orgs/open-service-portal/repos --paginate --jq '.[] | select(.name | startswith("template-") or endswith("-template")) | .name' > template-repos.txt
+
+          # Create overview index page
           echo "# Templates Documentation" > external-docs/templates/index.md
+          echo "" >> external-docs/templates/index.md
+          echo "Browse all available templates in the sidebar." >> external-docs/templates/index.md
           echo "" >> external-docs/templates/index.md
           echo "## Crossplane Templates" >> external-docs/templates/index.md
           echo "" >> external-docs/templates/index.md
-          
-          # Clone and document each template repo
-          for repo in template-dns-record; do
-            echo "### $repo" >> external-docs/templates/index.md
-            git clone https://github.com/open-service-portal/$repo.git temp-$repo
+
+          # Process each template as separate page
+          while IFS= read -r repo; do
+            echo "Processing $repo..."
+            git clone --depth 1 https://github.com/open-service-portal/$repo.git temp-$repo 2>/dev/null || continue
+
             if [ -f "temp-$repo/README.md" ]; then
-              echo "" >> external-docs/templates/index.md
-              tail -n +2 temp-$repo/README.md >> external-docs/templates/index.md
-              echo "" >> external-docs/templates/index.md
-              echo "---" >> external-docs/templates/index.md
-              echo "" >> external-docs/templates/index.md
+              # Add frontmatter with edit URL
+              echo "---" > external-docs/templates/$repo.md
+              echo "custom_edit_url: https://github.com/open-service-portal/$repo/edit/main/README.md" >> external-docs/templates/$repo.md
+              echo "---" >> external-docs/templates/$repo.md
+              echo "" >> external-docs/templates/$repo.md
+              cat temp-$repo/README.md >> external-docs/templates/$repo.md
+
+              # Add to index with link
+              if [[ $repo == template-* ]]; then
+                echo "- [$repo](./$repo.md)" >> external-docs/templates/index.md
+              fi
             fi
+
             rm -rf temp-$repo
-          done
-          
+          done < template-repos.txt
+
           echo "" >> external-docs/templates/index.md
           echo "## Backstage Service Templates" >> external-docs/templates/index.md
           echo "" >> external-docs/templates/index.md
-          
-          # Document service templates
-          for repo in service-nodejs-template service-mongodb-template service-cluster-template service-firewall-template service-dnsrecord-template service-mongodb-golden-path-template; do
-            echo "### $repo" >> external-docs/templates/index.md
-            git clone https://github.com/open-service-portal/$repo.git temp-$repo 2>/dev/null || continue
-            if [ -f "temp-$repo/README.md" ]; then
-              echo "" >> external-docs/templates/index.md
-              tail -n +2 temp-$repo/README.md >> external-docs/templates/index.md
-              echo "" >> external-docs/templates/index.md
-              echo "---" >> external-docs/templates/index.md
-              echo "" >> external-docs/templates/index.md
+
+          # Add service templates to index
+          while IFS= read -r repo; do
+            if [[ $repo == service-*-template ]]; then
+              if [ -f "external-docs/templates/$repo.md" ]; then
+                echo "- [$repo](./$repo.md)" >> external-docs/templates/index.md
+              fi
             fi
-            rm -rf temp-$repo
-          done
+          done < template-repos.txt
+
+          rm template-repos.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: npm ci
