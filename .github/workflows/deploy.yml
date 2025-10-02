@@ -204,6 +204,7 @@ jobs:
 
       - name: Clone and copy catalog docs
         run: |
+          # Clone catalog (templates)
           git clone https://github.com/open-service-portal/catalog.git temp-catalog
           if [ -d "temp-catalog/docs" ]; then
             cp -r temp-catalog/docs/* external-docs/catalog/ 2>/dev/null || true
@@ -238,7 +239,7 @@ jobs:
             mv temp-claude.md external-docs/catalog/claude.md
           fi
 
-          # Add custom_edit_url to all docs/* files
+          # Add custom_edit_url to all catalog docs/* files
           find external-docs/catalog -name "*.md" ! -name "index.md" ! -name "claude.md" -type f | while read file; do
             relpath=${file#external-docs/catalog/}
             echo "---" > temp.md
@@ -250,6 +251,41 @@ jobs:
           done
 
           rm -rf temp-catalog
+
+          # Clone catalog-orders
+          git clone https://github.com/open-service-portal/catalog-orders.git temp-catalog-orders
+          mkdir -p external-docs/catalog/orders
+
+          # Copy README as orders overview
+          if [ -f "temp-catalog-orders/README.md" ]; then
+            echo "---" > external-docs/catalog/orders/index.md
+            echo "custom_edit_url: https://github.com/open-service-portal/catalog-orders/edit/main/README.md" >> external-docs/catalog/orders/index.md
+            echo "---" >> external-docs/catalog/orders/index.md
+            echo "" >> external-docs/catalog/orders/index.md
+            cat temp-catalog-orders/README.md >> external-docs/catalog/orders/index.md
+          else
+            echo "# Catalog Orders" > external-docs/catalog/orders/index.md
+            echo "" >> external-docs/catalog/orders/index.md
+            echo "XR instances created via Backstage." >> external-docs/catalog/orders/index.md
+          fi
+
+          # Copy docs if exists
+          if [ -d "temp-catalog-orders/docs" ]; then
+            cp -r temp-catalog-orders/docs/* external-docs/catalog/orders/ 2>/dev/null || true
+
+            # Add custom_edit_url to all orders docs
+            find external-docs/catalog/orders -name "*.md" ! -name "index.md" -type f | while read file; do
+              relpath=${file#external-docs/catalog/orders/}
+              echo "---" > temp.md
+              echo "custom_edit_url: https://github.com/open-service-portal/catalog-orders/edit/main/docs/$relpath" >> temp.md
+              echo "---" >> temp.md
+              echo "" >> temp.md
+              cat "$file" >> temp.md
+              mv temp.md "$file"
+            done
+          fi
+
+          rm -rf temp-catalog-orders
 
       - name: Collect template documentation
         run: |
