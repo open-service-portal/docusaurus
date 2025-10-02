@@ -66,6 +66,28 @@ jobs:
             echo "# Portal Workspace" > external-docs/portal-workspace/index.md
             echo "Documentation coming soon." >> external-docs/portal-workspace/index.md
           fi
+
+          # Add custom_edit_url to index.md (README.md)
+          if [ -f "external-docs/portal-workspace/index.md" ]; then
+            echo "---" > temp-index.md
+            echo "custom_edit_url: https://github.com/open-service-portal/portal-workspace/edit/main/README.md" >> temp-index.md
+            echo "---" >> temp-index.md
+            echo "" >> temp-index.md
+            cat external-docs/portal-workspace/index.md >> temp-index.md
+            mv temp-index.md external-docs/portal-workspace/index.md
+          fi
+
+          # Add custom_edit_url to all docs/* files
+          find external-docs/portal-workspace -name "*.md" ! -name "index.md" -type f | while read file; do
+            relpath=${file#external-docs/portal-workspace/}
+            echo "---" > temp.md
+            echo "custom_edit_url: https://github.com/open-service-portal/portal-workspace/edit/main/docs/$relpath" >> temp.md
+            echo "---" >> temp.md
+            echo "" >> temp.md
+            cat "$file" >> temp.md
+            mv temp.md "$file"
+          done
+
           rm -rf temp-portal-workspace
 
       - name: Clone and copy app-portal docs
@@ -83,6 +105,38 @@ jobs:
           if [ -f "temp-app-portal/CLAUDE.md" ]; then
             cp temp-app-portal/CLAUDE.md external-docs/app-portal/claude.md
           fi
+
+          # Add custom_edit_url to index.md (README.md)
+          if [ -f "external-docs/app-portal/index.md" ]; then
+            echo "---" > temp-index.md
+            echo "custom_edit_url: https://github.com/open-service-portal/app-portal/edit/main/README.md" >> temp-index.md
+            echo "---" >> temp-index.md
+            echo "" >> temp-index.md
+            cat external-docs/app-portal/index.md >> temp-index.md
+            mv temp-index.md external-docs/app-portal/index.md
+          fi
+
+          # Add custom_edit_url to claude.md
+          if [ -f "external-docs/app-portal/claude.md" ]; then
+            echo "---" > temp-claude.md
+            echo "custom_edit_url: https://github.com/open-service-portal/app-portal/edit/main/CLAUDE.md" >> temp-claude.md
+            echo "---" >> temp-claude.md
+            echo "" >> temp-claude.md
+            cat external-docs/app-portal/claude.md >> temp-claude.md
+            mv temp-claude.md external-docs/app-portal/claude.md
+          fi
+
+          # Add custom_edit_url to all docs/* files
+          find external-docs/app-portal -name "*.md" ! -name "index.md" ! -name "claude.md" -type f | while read file; do
+            relpath=${file#external-docs/app-portal/}
+            echo "---" > temp.md
+            echo "custom_edit_url: https://github.com/open-service-portal/app-portal/edit/main/docs/$relpath" >> temp.md
+            echo "---" >> temp.md
+            echo "" >> temp.md
+            cat "$file" >> temp.md
+            mv temp.md "$file"
+          done
+
           rm -rf temp-app-portal
 
       - name: Clone and copy catalog docs
@@ -97,6 +151,28 @@ jobs:
             echo "# Catalog" > external-docs/catalog/index.md
             echo "Template catalog documentation." >> external-docs/catalog/index.md
           fi
+
+          # Add custom_edit_url to index.md (README.md)
+          if [ -f "external-docs/catalog/index.md" ]; then
+            echo "---" > temp-index.md
+            echo "custom_edit_url: https://github.com/open-service-portal/catalog/edit/main/README.md" >> temp-index.md
+            echo "---" >> temp-index.md
+            echo "" >> temp-index.md
+            cat external-docs/catalog/index.md >> temp-index.md
+            mv temp-index.md external-docs/catalog/index.md
+          fi
+
+          # Add custom_edit_url to all docs/* files
+          find external-docs/catalog -name "*.md" ! -name "index.md" -type f | while read file; do
+            relpath=${file#external-docs/catalog/}
+            echo "---" > temp.md
+            echo "custom_edit_url: https://github.com/open-service-portal/catalog/edit/main/docs/$relpath" >> temp.md
+            echo "---" >> temp.md
+            echo "" >> temp.md
+            cat "$file" >> temp.md
+            mv temp.md "$file"
+          done
+
           rm -rf temp-catalog
 
       - name: Collect template documentation
