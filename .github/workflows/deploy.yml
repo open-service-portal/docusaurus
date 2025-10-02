@@ -269,12 +269,21 @@ jobs:
             echo "XR instances created via Backstage." >> external-docs/catalog/orders/index.md
           fi
 
+          # Copy CLAUDE.md if exists
+          if [ -f "temp-catalog-orders/CLAUDE.md" ]; then
+            echo "---" > external-docs/catalog/orders/claude.md
+            echo "custom_edit_url: https://github.com/open-service-portal/catalog-orders/edit/main/CLAUDE.md" >> external-docs/catalog/orders/claude.md
+            echo "---" >> external-docs/catalog/orders/claude.md
+            echo "" >> external-docs/catalog/orders/claude.md
+            cat temp-catalog-orders/CLAUDE.md >> external-docs/catalog/orders/claude.md
+          fi
+
           # Copy docs if exists
           if [ -d "temp-catalog-orders/docs" ]; then
             cp -r temp-catalog-orders/docs/* external-docs/catalog/orders/ 2>/dev/null || true
 
             # Add custom_edit_url to all orders docs
-            find external-docs/catalog/orders -name "*.md" ! -name "index.md" -type f | while read file; do
+            find external-docs/catalog/orders -name "*.md" ! -name "index.md" ! -name "claude.md" -type f | while read file; do
               relpath=${file#external-docs/catalog/orders/}
               echo "---" > temp.md
               echo "custom_edit_url: https://github.com/open-service-portal/catalog-orders/edit/main/docs/$relpath" >> temp.md
