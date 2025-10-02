@@ -79,6 +79,15 @@ const config: Config = {
     [
       '@docusaurus/plugin-content-docs',
       {
+        id: 'plugins',
+        path: 'external-docs/plugins',
+        routeBasePath: 'plugins',
+        sidebarPath: './sidebars.ts',
+      },
+    ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
         id: 'catalog',
         path: 'external-docs/catalog',
         routeBasePath: 'catalog',
@@ -118,6 +127,11 @@ const config: Config = {
           position: 'left',
         },
         {
+          to: '/plugins',
+          label: 'Plugins',
+          position: 'left',
+        },
+        {
           to: '/catalog',
           label: 'Catalog',
           position: 'left',
@@ -147,6 +161,10 @@ const config: Config = {
             {
               label: 'App Portal',
               to: '/app-portal',
+            },
+            {
+              label: 'Plugins',
+              to: '/plugins',
             },
             {
               label: 'Catalog',

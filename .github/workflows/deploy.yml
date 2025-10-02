@@ -51,6 +51,7 @@ jobs:
         run: |
           mkdir -p external-docs/portal-workspace
           mkdir -p external-docs/app-portal
+          mkdir -p external-docs/plugins
           mkdir -p external-docs/catalog
           mkdir -p external-docs/templates
 
@@ -151,6 +152,55 @@ jobs:
           done
 
           rm -rf temp-app-portal
+
+      - name: Collect plugin documentation
+        run: |
+          # Create plugins overview page
+          echo "# Backstage Plugins" > external-docs/plugins/index.md
+          echo "" >> external-docs/plugins/index.md
+          echo "Documentation for custom Backstage plugins developed for Open Service Portal." >> external-docs/plugins/index.md
+          echo "" >> external-docs/plugins/index.md
+          echo "| Plugin | Source |" >> external-docs/plugins/index.md
+          echo "|--------|--------|" >> external-docs/plugins/index.md
+
+          # Process each plugin
+          for plugin in ingestor; do
+            echo "Processing plugin: $plugin..."
+            git clone --depth 1 https://github.com/open-service-portal/$plugin.git temp-$plugin 2>/dev/null || continue
+
+            # Create plugin subdirectory
+            mkdir -p external-docs/plugins/$plugin
+
+            # Copy README as index
+            if [ -f "temp-$plugin/README.md" ]; then
+              echo "---" > external-docs/plugins/$plugin/index.md
+              echo "custom_edit_url: https://github.com/open-service-portal/$plugin/edit/main/README.md" >> external-docs/plugins/$plugin/index.md
+              echo "---" >> external-docs/plugins/$plugin/index.md
+              echo "" >> external-docs/plugins/$plugin/index.md
+              cat temp-$plugin/README.md >> external-docs/plugins/$plugin/index.md
+            fi
+
+            # Copy docs/* if exists
+            if [ -d "temp-$plugin/docs" ]; then
+              cp -r temp-$plugin/docs/* external-docs/plugins/$plugin/ 2>/dev/null || true
+
+              # Add custom_edit_url to all docs files
+              find external-docs/plugins/$plugin -name "*.md" ! -name "index.md" -type f | while read file; do
+                relpath=${file#external-docs/plugins/$plugin/}
+                echo "---" > temp.md
+                echo "custom_edit_url: https://github.com/open-service-portal/$plugin/edit/main/docs/$relpath" >> temp.md
+                echo "---" >> temp.md
+                echo "" >> temp.md
+                cat "$file" >> temp.md
+                mv temp.md "$file"
+              done
+            fi
+
+            # Add to overview index
+            echo "| [\`$plugin\`](./$plugin/) | https://github.com/open-service-portal/$plugin/blob/main/README.md |" >> external-docs/plugins/index.md
+
+            rm -rf temp-$plugin
+          done
 
       - name: Clone and copy catalog docs
         run: |
