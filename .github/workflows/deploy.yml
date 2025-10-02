@@ -108,12 +108,12 @@ jobs:
           # Create overview index page
           echo "# Templates Documentation" > external-docs/templates/index.md
           echo "" >> external-docs/templates/index.md
-          echo "Browse all available templates in the sidebar or jump directly to their source repositories." >> external-docs/templates/index.md
+          echo "Browse all available templates in the sidebar or jump directly to their source documentation." >> external-docs/templates/index.md
           echo "" >> external-docs/templates/index.md
           echo "## Crossplane Templates" >> external-docs/templates/index.md
           echo "" >> external-docs/templates/index.md
-          echo "| Template | Documentation | Source Repository |" >> external-docs/templates/index.md
-          echo "|----------|---------------|-------------------|" >> external-docs/templates/index.md
+          echo "| Template | Source |" >> external-docs/templates/index.md
+          echo "|----------|--------|" >> external-docs/templates/index.md
 
           # Process each template as separate page
           while IFS= read -r repo; do
@@ -130,7 +130,7 @@ jobs:
 
               # Add to index with link
               if [[ $repo == template-* ]]; then
-                echo "| \`$repo\` | [View Docs](./$repo.md) | [GitHub](https://github.com/open-service-portal/$repo) |" >> external-docs/templates/index.md
+                echo "| [\`$repo\`](./$repo.md) | https://github.com/open-service-portal/$repo/blob/main/README.md |" >> external-docs/templates/index.md
               fi
             fi
 
@@ -140,14 +140,14 @@ jobs:
           echo "" >> external-docs/templates/index.md
           echo "## Backstage Service Templates" >> external-docs/templates/index.md
           echo "" >> external-docs/templates/index.md
-          echo "| Template | Documentation | Source Repository |" >> external-docs/templates/index.md
-          echo "|----------|---------------|-------------------|" >> external-docs/templates/index.md
+          echo "| Template | Source |" >> external-docs/templates/index.md
+          echo "|----------|--------|" >> external-docs/templates/index.md
 
           # Add service templates to index
           while IFS= read -r repo; do
             if [[ $repo == service-*-template ]]; then
               if [ -f "external-docs/templates/$repo.md" ]; then
-                echo "| \`$repo\` | [View Docs](./$repo.md) | [GitHub](https://github.com/open-service-portal/$repo) |" >> external-docs/templates/index.md
+                echo "| [\`$repo\`](./$repo.md) | https://github.com/open-service-portal/$repo/blob/main/README.md |" >> external-docs/templates/index.md
               fi
             fi
           done < template-repos.txt
